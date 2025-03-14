@@ -8,10 +8,12 @@
   - [x] Shared libraries folder structure
   - [x] Documentation folders
 - [x] Initialize Git repository
+- [x] Setup Python environment with uv
+  - [x] Install pytest for TDD
 - [ ] Setup Docker configuration
   - [ ] Create Dockerfiles for backend
   - [ ] Create Dockerfiles for frontend
-  - [x] Configure docker-compose.yml
+  - [ ] Configure docker-compose.yml
 - [ ] Configure CI/CD pipelines
 
 ## Domain Layer Development
@@ -20,12 +22,12 @@
   - [x] GPTRequest model
   - [x] GPTResponse model
   - [x] UserContext model
-- [ ] Implement domain services
-  - [ ] Create prompt formatting services
-  - [ ] Implement domain validation logic
-- [ ] Establish domain events
-  - [ ] Define event types and payloads
-  - [ ] Create event factory methods
+- [x] Implement domain services
+  - [x] Create prompt formatting services
+  - [x] Implement domain validation logic (prompt validation, input length validation)
+- [x] Establish domain events
+  - [x] Define event types and payloads
+  - [x] Create event factory methods
 
 ## Application Layer & Use Cases
 
@@ -74,6 +76,7 @@
 
 - [x] Write unit tests
   - [x] Domain model tests
+  - [x] Domain service tests (prompt formatting, validation)
   - [ ] Application use case tests
   - [ ] Helper function tests
 - [ ] Implement integration tests
@@ -86,8 +89,9 @@
 ## Documentation & Finalization
 
 - [x] Create comprehensive README
+- [x] Write software specification document
 - [ ] Write API documentation
-- [x] Document architecture decisions
+- [ ] Document architecture decisions
 - [ ] Prepare deployment guides
 - [ ] Final code review and refactoring
 
@@ -100,5 +104,5 @@
 
 ## Progress Tracking
 
-Current Phase: Domain Layer Development
+Current Phase: Domain Layer Development -> Moving to Application Layer
 Last Updated: 2024-07-11
