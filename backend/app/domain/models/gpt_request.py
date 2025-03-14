@@ -8,9 +8,20 @@ from datetime import datetime
 from typing import Optional, Dict, Any
 from pydantic import BaseModel, Field, field_validator, ConfigDict
 import logging
+from dataclasses import dataclass
 
 # Configure logging
 logger = logging.getLogger(__name__)
+
+@dataclass
+class GPTRequest:
+    prompt: str
+    max_tokens: int
+    temperature: float = 1.0
+    top_p: float = 1.0
+    frequency_penalty: float = 0.0
+    presence_penalty: float = 0.0
+    stop: Optional[list[str]] = None
 
 class GPTRequest(BaseModel):
     """
