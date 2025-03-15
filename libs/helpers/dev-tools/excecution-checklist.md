@@ -60,9 +60,9 @@
   - [x] Input validation functions
 - [x] Implement caching mechanisms
 - [x] Develop rate limiting functionality
-- [ ] Set up security services
+- [x] Set up security services
   - [x] Authentication and authorization
-  - [ ] Data encryption utilities
+  - [x] Data encryption utilities
 
 ## Frontend Development
 
@@ -81,6 +81,7 @@
   - [x] Domain service tests (prompt formatting, validation)
   - [x] Application use case tests
   - [x] Helper function tests
+  - [x] Run all tests with: `uv pip install pytest pytest-cov && uv run pytest`
 - [x] Implement integration tests
   - [x] API endpoint tests
   - [x] Service integration tests
