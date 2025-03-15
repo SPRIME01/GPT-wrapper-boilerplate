@@ -1,7 +1,7 @@
 # GPT Wrapper Boilerplate Software Specification Document
 
 **Version:** 1.0
-**Date:** 2024-03-10
+**Date:** 2025-03-10
 **Author:** [Your Name/Team]
 
 ---
@@ -23,6 +23,7 @@
    3.1 [Core Domain Features](#core-domain-features)
    3.2 [Application Use Cases](#application-use-cases)
    3.3 [Infrastructure and External Integration](#infrastructure-and-external-integration)
+   3.4 [Core Helper Functions](#core-helper-functions)
 
 4. [Non-Functional Requirements](#non-functional-requirements)
    4.1 [Performance and Scalability](#performance-and-scalability)
@@ -123,6 +124,16 @@ The architecture follows Clean Architecture and Hexagonal (Ports and Adapters) p
 - **Message Bus:** For asynchronous event processing and decoupled inter-service communication
 - **External APIs:** Integration with GPT and any other external services
 
+### 3.4 Core Helper Functions
+- **Input Processing:**
+  - Sanitization, tokenization, and validation of user input
+  - Dynamic prompt composition and template management
+  - Input length optimization and chunking
+- **Response Processing:**
+  - Response validation and error filtering
+  - Content moderation and safety checks
+  - Response formatting and transformation
+
 ---
 
 ## 4. Non-Functional Requirements
@@ -131,21 +142,55 @@ The architecture follows Clean Architecture and Hexagonal (Ports and Adapters) p
 - **High Throughput:** Efficient processing of GPT requests and responses
 - **Scalability:** Ability to scale horizontally (microservices) or vertically (monorepo) with minimal rework
 - **Low Latency:** Optimized data processing pipelines and caching mechanisms
+- **Response Time:**
+  - API requests processed within 200ms (excluding GPT API time)
+  - UI interactions respond within 100ms
+- **Throughput:**
+  - Support for 1000+ concurrent users
+  - Handle 100+ requests per second per instance
+- **Scalability:**
+  - Horizontal scaling support
+  - Stateless service design
+  - Efficient caching mechanisms
 
 ### 4.2 Security and Compliance
 - **Data Protection:** Secure encryption/decryption of sensitive data
 - **Access Control:** Robust authentication and authorization mechanisms
 - **Compliance:** Adherence to GDPR, CCPA, and other regulatory requirements
+- **Authentication & Authorization:**
+  - JWT-based authentication
+  - Role-based access control
+  - API key management
+- **Data Protection:**
+  - End-to-end encryption for sensitive data
+  - PII handling compliance
+  - Input/output sanitization
 
 ### 4.3 Maintainability and Extensibility
 - **Modular Design:** Clear separation between domain, application, and infrastructure layers
 - **Test Coverage:** Comprehensive unit, integration, and end-to-end testing to ensure reliability
 - **Documentation:** Detailed guides, API contracts, and architectural decision records (ADRs)
+- **Code Quality:**
+  - 90%+ test coverage
+  - Static type checking
+  - Automated linting and formatting
+- **Documentation:**
+  - Comprehensive API documentation
+  - Inline code documentation
+  - Architecture decision records (ADRs)
 
 ### 4.4 Reliability and Fault Tolerance
 - **Resilience Mechanisms:** Implement circuit breakers, retries, and graceful degradation
 - **Monitoring:** Centralized logging, performance metrics, and alerting systems
 - **Error Handling:** Global error handlers to capture and log exceptions without system crashes
+- **Error Handling:**
+  - Graceful degradation
+  - Circuit breaker implementation
+  - Comprehensive error logging
+- **High Availability:**
+  - 99.9% uptime target
+  - Automatic failover
+  - Data redundancy
 
 ---
 
@@ -157,6 +202,31 @@ The system is divided into four primary layers:
 - **Application Layer:** Hosts use cases and interacts with domain services
 - **Infrastructure Layer:** Implements adapters to interface with external systems
 - **Frontend:** Provides user interaction capabilities
+
+#### Domain Layer
+```plaintext
+app/domain/
+├── models/          # Core business objects
+├── events/          # Domain events
+├── services/        # Domain logic
+└── factories/       # Object creation
+```
+
+#### Application Layer
+```plaintext
+app/application/
+├── ports/          # Interface definitions
+├── use_cases/      # Business operations
+└── services/       # Application services
+```
+
+#### Infrastructure Layer
+```plaintext
+app/infrastructure/
+├── adapters/       # External integrations
+├── persistence/    # Data storage
+└── messaging/      # Event handling
+```
 
 ### 5.2 Layered Structure & File Organization
 ```
@@ -197,6 +267,36 @@ gpt-wrapper-boilerplate/
   - `UserContext`
   - Event/message primitives
 
+#### Helper Functions
+```python
+# Input Processing
+sanitize_input(text: str) -> str
+tokenize_input(text: str) -> List[str]
+truncate_input(text: str, max_length: int) -> str
+
+# Prompt Engineering
+format_prompt(template: str, **kwargs) -> str
+generate_few_shot_examples(task: str, n: int) -> List[str]
+
+# Response Processing
+parse_json_response(response: str) -> Dict
+remove_hallucinations(text: str) -> str
+```
+
+#### Primitive Types
+```python
+# Core Data Types
+GPTRequest
+GPTResponse
+UserContext
+CachedResponse
+RateLimitQuota
+
+# Event Types
+SystemEvent
+MessageQueueItem
+```
+
 ---
 
 ## 6. Testing Strategy
@@ -227,15 +327,40 @@ gpt-wrapper-boilerplate/
 - **Automated Testing:** Run all test suites on every commit
 - **Static Analysis:** Configure linters and code quality checks
 - **Docker Builds:** Automate image creation and deployment
+```yaml
+# Pipeline Stages
+- Lint & Format
+- Unit Tests
+- Integration Tests
+- Security Scan
+- Build
+- Deploy
+```
 
 ### 7.2 Containerization and Orchestration
 - **Docker:** Provide Dockerfiles and docker-compose
 - **Kubernetes:** Optional manifests for production deployment
+- **Infrastructure as Code:**
+  - Docker containerization
+  - Kubernetes orchestration
+  - Environment configuration
 
 ### 7.3 Monitoring, Logging, and Observability
 - **Centralized Logging:** ELK/EFK stack integration
 - **Metrics and Alerts:** Prometheus/Grafana setup
 - **Distributed Tracing:** Jaeger/Zipkin implementation
+- **Metrics Collection:**
+  - Request/response times
+  - Error rates
+  - Resource usage
+- **Logging:**
+  - Structured logging
+  - Log aggregation
+  - Error tracking
+- **Monitoring:**
+  - Health checks
+  - Performance metrics
+  - Alert thresholds
 
 ---
 
@@ -247,6 +372,18 @@ gpt-wrapper-boilerplate/
 - **Enhanced Analytics:** Track prompt performance and user engagement
 - **Advanced UI:** Additional interactive components and real-time feedback
 
+### 8.1 Planned Features
+- Streaming support for real-time responses
+- Fine-tuning capabilities
+- Multi-tenant architecture
+- Enhanced analytics
+
+### 8.2 Technical Debt Considerations
+- Performance optimization
+- Code modernization
+- Documentation updates
+- Test coverage improvement
+
 ---
 
 ## 9. Glossary and Appendices
@@ -257,12 +394,18 @@ gpt-wrapper-boilerplate/
 - **Event-Driven Architecture:** Design paradigm using events for component communication
 - **TDD:** Test-Driven Development methodology
 - **CI/CD:** Continuous Integration and Deployment practices
+- **CQRS:** Command Query Responsibility Segregation
+- **Event Sourcing:** Pattern for storing state as sequence of events
 
 ### 9.2 Appendices
 - **Appendix A:** Environment File Template (`.env.example`)
 - **Appendix B:** CI/CD Pipeline Configurations
 - **Appendix C:** API Contract Specifications
 - **Appendix D:** Architectural Decision Records Summary
+- **A:** API Documentation
+- **B:** Database Schema
+- **C:** Event Catalog
+- **D:** Deployment Guide
 
 ---
 
@@ -270,7 +413,7 @@ gpt-wrapper-boilerplate/
 
 | Version | Date       | Author      | Description                           |
 |---------|------------|-------------|---------------------------------------|
-| 1.0     | 2024-03-10| [Your Name] | Initial specification document creation|
+| 1.0     | 2025-03-10 | [Your Name] | Initial version                       |
 
 ---
 
