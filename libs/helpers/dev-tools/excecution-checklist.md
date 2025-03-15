@@ -61,7 +61,7 @@
 - [x] Implement caching mechanisms
 - [x] Develop rate limiting functionality
 - [ ] Set up security services
-  - [ ] Authentication and authorization
+  - [x] Authentication and authorization
   - [ ] Data encryption utilities
 
 ## Frontend Development
