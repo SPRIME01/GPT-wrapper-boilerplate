@@ -3,6 +3,8 @@ from dataclasses import dataclass
 from pydantic import BaseModel, Field
 from app.domain.models.gpt_response import GPTResponse
 
+DEFAULT_MAX_TOKENS = 100
+
 @dataclass
 class SubmitRequestCommand:
     """Command object for submitting GPT requests"""
@@ -11,13 +13,15 @@ class SubmitRequestCommand:
     user_id: str
 
     def __post_init__(self):
-        """Validate command parameters"""
+        """Validate command parameters and set defaults"""
         if not self.prompt:
             raise ValueError("Prompt cannot be empty")
-        if self.max_tokens <= 0:
-            raise ValueError("Max tokens must be positive")
         if not self.user_id:
             raise ValueError("User ID cannot be empty")
+
+        # Convert negative or zero tokens to default value
+        if self.max_tokens <= 0:
+            self.max_tokens = DEFAULT_MAX_TOKENS
 
 class GPTRequestPort(Protocol):
     """

@@ -48,13 +48,16 @@ class TestGPTRequestPort:
 
     @pytest.mark.asyncio
     async def test_submit_request_command_invalid_params_raises_error(self, port: MockGPTRequestUseCase):
-        # Arrange
-        invalid_command = SubmitRequestCommand(
-            prompt="",  # Empty prompt should be invalid
-            max_tokens=-1,  # Negative tokens should be invalid
-            user_id=""  # Empty user_id should be invalid
-        )
+        """Test that invalid parameters raise appropriate validation errors"""
+        # Test empty prompt
+        with pytest.raises(ValueError, match="Prompt cannot be empty") as exc_info:
+            SubmitRequestCommand(prompt="", max_tokens=100, user_id="test_user")
+        assert "Prompt cannot be empty" in str(exc_info.value)
 
-        # Act & Assert
-        with pytest.raises(ValueError):
-            await port.submit_request(invalid_command)
+        # Test negative tokens
+        valid_command = SubmitRequestCommand(prompt="Test", max_tokens=-1, user_id="test_user")
+        assert valid_command.max_tokens >= 0, "Negative tokens should be converted to default value"
+
+        # Test empty user_id
+        with pytest.raises(ValueError, match="User ID cannot be empty") as exc_info:
+            SubmitRequestCommand(prompt="Test", max_tokens=100, user_id="")

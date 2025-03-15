@@ -1,16 +1,19 @@
 [project]
 name = "backend"
 version = "0.1.0"
-description = "GPT Wrapper Backend Service"
+description = "GPT Wrapper Boilerplate Backend"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "pydantic>=2.10.6",
-    "fastapi>=0.109.0",  # For HTTP interface
-    "uvicorn>=0.27.0",   # ASGI server
-    "typing-extensions>=4.9.0",  # For Protocol support
-    "python-jose[cryptography]>=3.3.0",  # For JWT handling
-    "structlog>=24.1.0",  # Structured logging
+    "fastapi>=0.109.0", # For HTTP interface
+    "uvicorn>=0.27.0", # ASGI server
+    "typing-extensions>=4.9.0", # For Protocol support
+    "python-jose[cryptography]>=3.3.0", # For JWT handling
+    "structlog>=24.1.0", # Structured logging
+    "httpx>=0.27.0",  # For FastAPI testing
+    "dependency-injector>=4.41.0",  # For dependency injection
+    "strawberry-graphql>=0.220.0",  # For GraphQL support
 ]
 
 [project.optional-dependencies]
@@ -31,7 +34,11 @@ pythonpath = [
   "."
 ]
 testpaths = ["tests"]
-addopts = "--cov=app --cov-report=term-missing"
+addopts = "-ra -q"
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+python_files = ["test_*.py"]
+asyncio_mode = "strict"
 
 [tool.mypy]
 python_version = "3.12"
@@ -49,3 +56,7 @@ ignore = []
 
 [tool.hatch.build.targets.wheel]
 packages = ["app"]
+
+[tool.black]
+line-length = 88
+target-version = ['py312']
