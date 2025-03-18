@@ -19,12 +19,12 @@ This document outlines the step-by-step integration plan for connecting our **GP
 
 ### Phase 2: Test Infrastructure Setup (TDD First)
 
-- [ ] **2.1** Create test fixtures for CopilotKit integration
-  - [ ] **2.1.1** Mock CopilotKit API requests
-  - [ ] **2.1.2** Set up test database with sample conversation data
-- [ ] **2.2** Write GraphQL schema tests
-  - [ ] **2.2.1** Test query resolvers for conversation data
-  - [ ] **2.2.2** Test mutation resolvers for request submission
+- [x] **2.1** Create test fixtures for CopilotKit integration
+  - [x] **2.1.1** Mock CopilotKit API requests
+  - [x] **2.1.2** Set up test database with sample conversation data
+- [x] **2.2** Write GraphQL schema tests
+  - [x] **2.2.1** Test query resolvers for conversation data
+  - [x] **2.2.2** Test mutation resolvers for request submission
 - [ ] **2.3** Write FastAPI endpoint tests for external communication
   - [ ] **2.3.1** Test CopilotKit-specific endpoints
   - [ ] **2.3.2** Test authentication/authorization flow
