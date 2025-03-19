@@ -45,3 +45,34 @@ class TestSodiumService:
         # Assert
         assert encrypted != original_data
         assert decrypted == original_data
+
+    def test_asymmetric_encryption_with_invalid_key(self, sodium_service):
+        # Arrange
+        original_data = "sensitive data"
+        invalid_public_key = b"invalid_key"
+
+        # Act & Assert
+        with pytest.raises(Exception):
+            sodium_service.asymmetric_encrypt(original_data, invalid_public_key)
+
+    def test_symmetric_decryption_with_invalid_key(self, sodium_service):
+        # Arrange
+        original_data = "sensitive data"
+        encrypted, key = sodium_service.symmetric_encrypt(original_data)
+        invalid_key = "invalid_key"
+
+        # Act & Assert
+        with pytest.raises(Exception):
+            sodium_service.symmetric_decrypt(encrypted, invalid_key)
+
+    def test_asymmetric_decryption_with_invalid_key(self, sodium_service, other_private_key):
+        # Arrange
+        original_data = "sensitive data"
+        other_public_key = other_private_key.public_key
+        encrypted = sodium_service.asymmetric_encrypt(original_data, other_public_key)
+        invalid_private_key = PrivateKey.generate()
+
+        # Act & Assert
+        with pytest.raises(Exception):
+            box = Box(invalid_private_key, sodium_service.public_key)
+            box.decrypt(base64.b64decode(encrypted))
