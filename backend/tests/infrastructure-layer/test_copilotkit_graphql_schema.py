@@ -2,21 +2,18 @@
 Tests for CopilotKit GraphQL schema components.
 
 This module tests the GraphQL schema designed for CopilotKit integration,
-including types, queries, and mutations for conversation management and
-chat functionality.
+including types, queries, and mtations for conversation management and chat functionality.
 """
+
 import pytest
 import strawberry
-from strawberry.test import client
-import json
 from datetime import datetime
-from unittest.mock import patch, AsyncMock, MagicMock
 from typing import List, Dict, Any, Optional
-import asyncio
+from strawberry.scalars import JSON
+from strawberry.test import client
 
-# Try both import approaches for better compatibility
+# Import test fixtures with fallback mechanism
 try:
-    # Absolute import (should work with conftest.py path modification)
     from backend.tests.fixtures.conversation_fixtures import (
         sample_conversation_history,
         mock_conversation_db,
@@ -24,7 +21,6 @@ try:
         ConversationMessage
     )
 except ImportError:
-    # Fallback to relative import
     from ..fixtures.conversation_fixtures import (
         sample_conversation_history,
         mock_conversation_db,
@@ -32,7 +28,7 @@ except ImportError:
         ConversationMessage
     )
 
-
+# GraphQL Message Type
 @strawberry.type
 class GraphQLConversationMessage:
     """GraphQL type for conversation messages."""
@@ -42,7 +38,7 @@ class GraphQLConversationMessage:
     timestamp: datetime
     conversation_id: str = strawberry.field(name="conversationId")
 
-
+# GraphQL Conversation Type
 @strawberry.type
 class GraphQLConversation:
     """GraphQL type for conversations."""
@@ -57,33 +53,90 @@ class GraphQLConversation:
         """Get the number of messages in the conversation."""
         return len(self.messages)
 
-
+# Input Types
 @strawberry.input
 class CreateConversationInput:
     """Input type for creating a new conversation."""
-    user_id: str
+    user_id: str = strawberry.field(name="userId")
     title: str
-    initial_message: Optional[str] = None
+    initial_message: Optional[str] = strawberry.field(
+        default=None,
+        name="initialMessage"
+    )
     metadata: Optional[Dict[str, Any]] = None
-
 
 @strawberry.input
 class AddMessageInput:
     """Input type for adding a message to a conversation."""
-    conversation_id: str
+    conversation_id: str = strawberry.field(name="conversationId")
     role: str
     content: str
     metadata: Optional[Dict[str, Any]] = None
 
+@strawberry.input
+class ChatRequestInput:
+    """Input type for submitting a chat request."""
+    conversation_id: str = strawberry.field(name="conversationId")
+    message: str
+    stream: bool = True
+    context_data: Optional[Dict[str, Any]] = strawberry.field(
+        default=None,
+        name="contextData"
+    )
+
+# Response Types
+@strawberry.type
+class ChatRequestResponse:
+    """Response type for chat requests."""
+    request_id: str = strawberry.field(name="requestId")
+    status: str
+
+# Fixed Input Types using JSON scalar
+@strawberry.input
+class FixedCreateConversationInput:
+    """Input type for creating a new conversation with JSON metadata."""
+    user_id: str = strawberry.field(name="userId")
+    title: str
+    initial_message: Optional[str] = strawberry.field(
+        default=None,
+        name="initialMessage"
+    )
+    metadata: Optional[JSON] = None
+
+@strawberry.input
+class FixedAddMessageInput:
+    """Input type for adding a message with JSON metadata."""
+    conversation_id: str = strawberry.field(name="conversationId")
+    role: str
+    content: str
+    metadata: Optional[JSON] = None
+
+@strawberry.input
+class FixedChatRequestInput:
+    """Input type for submitting a chat request with JSON context data."""
+    conversation_id: str = strawberry.field(name="conversationId")
+    message: str
+    stream: bool = True
+    context_data: Optional[JSON] = strawberry.field(
+        default=None,
+        name="contextData"
+    )
+
+@strawberry.input
+class AddMessageInput:
+    """Input type for adding a message to a conversation."""
+    conversation_id: str = strawberry.field(name="conversationId")
+    role: str
+    content: str
+    metadata: Optional[Dict[str, Any]] = None
 
 @strawberry.input
 class ChatRequestInput:
     """Input type for submitting a chat request."""
-    conversation_id: str
+    conversation_id: str = strawberry.field(name="conversationId")
     message: str
     stream: bool = True
-    context_data: Optional[Dict[str, Any]] = None
-
+    context_data: Optional[Dict[str, Any]] = strawberry.field(default=None, name="contextData")
 
 @strawberry.type
 class ChatRequestResponse:
@@ -91,85 +144,122 @@ class ChatRequestResponse:
     request_id: str = strawberry.field(name="requestId")
     status: str
 
-
-class TestCopilotKitGraphQLSchema:
-    """Test suite for CopilotKit GraphQL schema components."""
-
-    @pytest.fixture
-    def graphql_context(self, mock_conversation_db):
-        """
-        Create a mock GraphQL context for testing.
-
-        Args:
-            mock_conversation_db: Mock conversation database
-
-        Returns:
-            dict: Context dictionary with necessary components
-        """
-        # Create mock container
-        class MockContainer:
-            def __init__(self):
-                self.conversation_db = mock_conversation_db
-
-            def get_conversation_repository(self):
-                return self.conversation_db
-
-            def get_submit_request_use_case(self):
-                mock_use_case = AsyncMock()
-                mock_use_case.execute.return_value = {
-                    "request_id": "req-12345",
-                    "status": "processing"
-                }
-                return mock_use_case
-
-        return {
-            "container": MockContainer(),
-            "user": {"id": "test-user-1"}
+    @pytest.mark.asyncio
+    async def test_conversations_query_raises_error_when_database_error_occurs(
+        self, graphql_context, error_handling_schema
+    ):
+        """Test that the conversations query properly handles database errors."""
+        # Arrange
+        query = """
+        query GetUserConversations($userId: String!) {
+            conversations(userId: $userId)
         }
+        """
+        variables = {"userId": "error-user"}
+
+        # Act
+        result = await client.query(
+            error_handling_schema,
+            query,
+            variables=variables,
+            context_value=graphql_context
+        )
+
+        # Assert
+        assert "errors" in result
+        assert len(result["errors"]) > 0
+        assert "Error fetching conversations" in result["errors"][0]["message"]
+
+    @pytest.mark.asyncio
+    async def test_conversation_query_raises_error_when_retrieval_error_occurs(
+        self, graphql_context, error_handling_schema
+    ):
+        """Test that the conversation query properly handles retrieval errors."""
+        # Arrange
+        query = """
+        query GetConversation($id: String!) {
+            conversation(id: $id)
+        }
+        """
+        variables = {"id": "error-conv"}
+
+        # Act
+        result = await client.query(
+            error_handling_schema,
+            query,
+            variables=variables,
+            context_value=graphql_context
+        )
+
+        # Assert
+        assert "errors" in result
+        assert len(result["errors"]) > 0
+        assert "Error fetching conversation" in result["errors"][0]["message"]
 
     @pytest.fixture
-    def conversations_query_schema(self, graphql_context):
-        """
-        Create a schema with conversations query for testing.
-
-        Args:
-            graphql_context: GraphQL context fixture
-
-        Returns:
-            Schema: A Strawberry schema with conversations query
-        """
+    def validation_schema(self):
+        """Create a schema with input validation for testing."""
         @strawberry.type
         class Query:
             @strawberry.field
-            def conversations(self, user_id: str) -> List[GraphQLConversation]:
-                """Get conversations for a user."""
-                repository = graphql_context["container"].get_conversation_repository()
-                conversations = repository["get_user_conversations"](user_id)
+            def placeholder(self) -> str:
+                return "placeholder"
 
-                return [
-                    GraphQLConversation(
-                        id=conv.id,
-                        title=conv.title,
-                        created_at=conv.created_at,
-                        updated_at=conv.updated_at,
-                        messages=[
-                            GraphQLConversationMessage(
-                                id=msg.id,
-                                role=msg.role,
-                                content=msg.content,
-                                timestamp=msg.timestamp,
-                                conversation_id=msg.conversation_id
-                            )
-                            for msg in conv.messages
-                        ]
+        @strawberry.type
+        class ValidationError:
+            field: str
+            message: str
+
+        @strawberry.type
+        class CreateConversationSuccess:
+            id: str
+            title: str
+
+        @strawberry.type
+        class CreateConversationResult:
+            @strawberry.field
+            def success(self) -> Optional[CreateConversationSuccess]:
+                return self._success if hasattr(self, "_success") else None
+
+            @strawberry.field
+            def errors(self) -> List[ValidationError]:
+                return self._errors if hasattr(self, "_errors") else []
+
+        @strawberry.type
+        class Mutation:
+            @strawberry.mutation
+            def create_conversation(self, input: CreateConversationInput) -> CreateConversationResult:
+                result = CreateConversationResult()
+                errors = []
+
+                # Validate title
+                if not input.title or len(input.title) < 3:
+                    errors.append(ValidationError(
+                        field="title",
+                        message="Title must be at least 3 characters long"
+                    ))
+
+                # Validate user ID
+                if not input.user_id:
+                    errors.append(ValidationError(
+                        field="userId",
+                        message="User ID is required"
+                    ))
+
+                if errors:
+                    result._errors = errors
+                else:
+                    result._success = CreateConversationSuccess(
+                        id="new-conv-123",
+                        title=input.title
                     )
-                    for conv in conversations
-                ]
 
-        return strawberry.Schema(query=Query)
+                return result
+
+        return strawberry.Schema(query=Query, mutation=Mutation)
 
     @pytest.mark.asyncio
-    async def test_ConversationsQuery_ReturnsUserConversations_WhenValidUserIdProvided(
+    async def test_conversations_query_returns_user_conversations_when_valid_user_id_provided(
         self, graphql_context, mock_conversation_db, sample_conversation_history, conversations_query_schema
     ):
         """
@@ -197,9 +287,9 @@ class TestCopilotKitGraphQLSchema:
         variables = {"userId": "test-user-1"}
 
         # Act
-        # Use TestClient to execute the query
-        test_client = client.TestClient(conversations_query_schema)
-        result = test_client.query(
+        # Use the client module directly, not as a class
+        result = await client.query(
+            conversations_query_schema,
             query,
             variables=variables,
             context_value=graphql_context
@@ -226,9 +316,9 @@ class TestCopilotKitGraphQLSchema:
         assert "Python Programming Help" in titles
 
     @pytest.fixture
-    def conversations_empty_schema(self, graphql_context):
+    def conversations_query_schema(self, graphql_context):
         """
-        Create a schema that returns empty conversations list.
+        Create a schema with conversations query for testing.
 
         Args:
             graphql_context: GraphQL context fixture
@@ -243,7 +333,6 @@ class TestCopilotKitGraphQLSchema:
                 """Get conversations for a user."""
                 repository = graphql_context["container"].get_conversation_repository()
                 conversations = repository["get_user_conversations"](user_id)
-
                 return [
                     GraphQLConversation(
                         id=conv.id,
@@ -267,7 +356,144 @@ class TestCopilotKitGraphQLSchema:
         return strawberry.Schema(query=Query)
 
     @pytest.mark.asyncio
-    async def test_ConversationsQuery_ReturnsEmptyList_WhenUserHasNoConversations(
+    async def test_create_conversation_mutation_returns_validation_errors_when_input_invalid(
+        self, validation_schema
+    ):
+        """Test that the createConversation mutation validates input and returns proper errors."""
+        # Arrange
+        mutation = """
+        mutation TestCreateConversation($input: CreateConversationInput!) {
+            createConversation(input: $input) {
+                success {
+                    id
+                    title
+                }
+                errors {
+                    field
+                    message
+                }
+            }
+        }
+        """
+
+        variables = {
+            "input": {
+                "userId": "",
+                "title": "AB",
+                "initialMessage": "Hello"
+            }
+        }
+
+        # Act
+        result = await client.query(
+            validation_schema,
+            mutation,
+            variables=variables
+        )
+
+        # Assert
+        assert "errors" not in result, f"GraphQL errors: {result.get('errors')}"
+        assert "data" in result
+        assert "createConversation" in result["data"]
+        response = result["data"]["createConversation"]
+
+        assert response["success"] is None
+        assert len(response["errors"]) == 2
+
+        error_fields = [error["field"] for error in response["errors"]]
+        assert "title" in error_fields
+        assert "userId" in error_fields
+
+    @pytest.mark.asyncio
+    async def test_create_conversation_mutation_returns_success_when_input_valid(
+        self, validation_schema
+    ):
+        """Test that the createConversation mutation returns success for valid input."""
+        # Arrange
+        mutation = """
+        mutation TestCreateConversation($input: CreateConversationInput!) {
+            createConversation(input: $input) {
+                success {
+                    id
+                    title
+                }
+                errors {
+                    field
+                    message
+                }
+            }
+        }
+        """
+
+        variables = {
+            "input": {
+                "userId": "test-user-1",
+                "title": "Valid Title",
+                "initialMessage": "Hello"
+            }
+        }
+
+        # Act
+        result = await client.query(
+            validation_schema,
+            mutation,
+            variables=variables
+        )
+
+        # Assert
+        assert "errors" not in result, f"GraphQL errors: {result.get('errors')}"
+        assert "data" in result
+        assert "createConversation" in result["data"]
+        response = result["data"]["createConversation"]
+
+        assert response["success"] is not None
+        assert response["success"]["id"] == "new-conv-123"
+        assert response["success"]["title"] == "Valid Title"
+
+        assert len(response["errors"]) == 0
+
+    @pytest.fixture
+    def conversations_empty_schema(self, graphql_context):
+        """
+        Create a schema that returns empty conversations list.
+
+        Args:
+            graphql_context: GraphQL context fixture
+
+        Returns:
+            Schema: A Strawberry schema with conversations query
+        """
+        @strawberry.type
+        class Query:
+            @strawberry.field
+            def conversations(self, user_id: str) -> List[GraphQLConversation]:
+                """Get conversations for a user."""
+                repository = graphql_context["container"].get_conversation_repository()
+                conversations = repository["get_user_conversations"](user_id)
+                return [
+                    GraphQLConversation(
+                        id=conv.id,
+                        title=conv.title,
+                        created_at=conv.created_at,
+                        updated_at=conv.updated_at,
+                        messages=[
+                            GraphQLConversationMessage(
+                                id=msg.id,
+                                role=msg.role,
+                                content=msg.content,
+                                timestamp=msg.timestamp,
+                                conversation_id=msg.conversation_id
+                            )
+                            for msg in conv.messages
+                        ]
+                    )
+                    for conv in conversations
+                ]
+
+        return strawberry.Schema(query=Query)
+
+    @pytest.mark.asyncio
+    async def test_conversations_query_returns_empty_list_when_user_has_no_conversations(
         self, graphql_context, mock_conversation_db, conversations_empty_schema
     ):
         """
@@ -291,9 +517,9 @@ class TestCopilotKitGraphQLSchema:
         variables = {"userId": "non-existent-user"}
 
         # Act
-        # Use TestClient to execute the query
-        test_client = client.TestClient(conversations_empty_schema)
-        result = test_client.query(
+        # Use the client module directly
+        result = await client.query(
+            conversations_empty_schema,
             query,
             variables=variables,
             context_value=graphql_context
@@ -323,10 +549,8 @@ class TestCopilotKitGraphQLSchema:
                 """Get a conversation by ID."""
                 repository = graphql_context["container"].get_conversation_repository()
                 conversation = repository["get_conversation"](id)
-
                 if not conversation:
                     raise ValueError(f"Conversation not found: {id}")
-
                 return GraphQLConversation(
                     id=conversation.id,
                     title=conversation.title,
@@ -347,7 +571,7 @@ class TestCopilotKitGraphQLSchema:
         return strawberry.Schema(query=Query)
 
     @pytest.mark.asyncio
-    async def test_ConversationQuery_ReturnsConversationDetails_WhenValidIdProvided(
+    async def test_conversation_query_returns_conversation_details_when_valid_id_provided(
         self, graphql_context, mock_conversation_db, sample_conversation_history, conversation_detail_schema
     ):
         """
@@ -379,9 +603,9 @@ class TestCopilotKitGraphQLSchema:
         variables = {"id": "conv-programming-456"}
 
         # Act
-        # Use TestClient to execute the query
-        test_client = client.TestClient(conversation_detail_schema)
-        result = test_client.query(
+        # Use the client module directly
+        result = await client.query(
+            conversation_detail_schema,
             query,
             variables=variables,
             context_value=graphql_context
@@ -410,7 +634,7 @@ class TestCopilotKitGraphQLSchema:
         assert "assistant" in roles
 
     @pytest.mark.asyncio
-    async def test_ConversationQuery_RaisesError_WhenInvalidIdProvided(
+    async def test_conversation_query_raises_error_when_invalid_id_provided(
         self, graphql_context, mock_conversation_db, conversation_detail_schema
     ):
         """
@@ -434,9 +658,9 @@ class TestCopilotKitGraphQLSchema:
         variables = {"id": "non-existent-id"}
 
         # Act
-        # Use TestClient to execute the query
-        test_client = client.TestClient(conversation_detail_schema)
-        result = test_client.query(
+        # Use the client module directly
+        result = await client.query(
+            conversation_detail_schema,
             query,
             variables=variables,
             context_value=graphql_context
@@ -513,7 +737,7 @@ class TestCopilotKitGraphQLSchema:
         return strawberry.Schema(query=Query, mutation=Mutation)
 
     @pytest.mark.asyncio
-    async def test_CreateConversationMutation_CreatesAndReturnsNewConversation_WhenValidInputProvided(
+    async def test_create_conversation_mutation_creates_and_returns_new_conversation_when_valid_input_provided(
         self, graphql_context, mock_conversation_db, create_conversation_schema
     ):
         """
@@ -537,10 +761,10 @@ class TestCopilotKitGraphQLSchema:
         }
         """
 
-        # Fix: Use proper variable structure for CreateConversationInput
+        # Pass values that match the GraphQL schema field names
         variables = {
             "input": {
-                "userId": "test-user-1",  # Note: This needs to match the field name exactly (user_id in class, but maybe userId in GraphQL)
+                "userId": "test-user-1",
                 "title": "New Test Conversation",
                 "initialMessage": "Hello, this is a test."
             }
@@ -551,9 +775,9 @@ class TestCopilotKitGraphQLSchema:
         initial_count = len(initial_conversations)
 
         # Act
-        # Use TestClient to execute the mutation
-        test_client = client.TestClient(create_conversation_schema)
-        result = test_client.query(
+        # Use the client module directly
+        result = await client.query(
+            create_conversation_schema,
             mutation,
             variables=variables,
             context_value=graphql_context
@@ -630,7 +854,7 @@ class TestCopilotKitGraphQLSchema:
         return strawberry.Schema(query=Query, mutation=Mutation)
 
     @pytest.mark.asyncio
-    async def test_AddMessageMutation_AddsMessageToConversation_WhenValidInputProvided(
+    async def test_add_message_mutation_adds_message_to_conversation_when_valid_input_provided(
         self, graphql_context, mock_conversation_db, sample_conversation_history, add_message_schema
     ):
         """
@@ -669,9 +893,9 @@ class TestCopilotKitGraphQLSchema:
         initial_message_count = len(conversation.messages)
 
         # Act
-        # Use TestClient to execute the mutation
-        test_client = client.TestClient(add_message_schema)
-        result = test_client.query(
+        # Use the client module directly
+        result = await client.query(
+            add_message_schema,
             mutation,
             variables=variables,
             context_value=graphql_context
@@ -746,7 +970,7 @@ class TestCopilotKitGraphQLSchema:
         return strawberry.Schema(query=Query, mutation=Mutation)
 
     @pytest.mark.asyncio
-    async def test_SubmitChatRequestMutation_CallsUseCaseWithCorrectParameters_WhenValidInputProvided(
+    async def test_submit_chat_request_mutation_calls_use_case_with_correct_parameters_when_valid_input_provided(
         self, graphql_context, mock_conversation_db, submit_chat_request_schema
     ):
         """
@@ -782,9 +1006,9 @@ class TestCopilotKitGraphQLSchema:
         use_case_mock = graphql_context["container"].get_submit_request_use_case()
 
         # Act
-        # Use TestClient to execute the mutation
-        test_client = client.TestClient(submit_chat_request_schema)
-        result = test_client.query(
+        # Use the client module directly
+        result = await client.query(
+            submit_chat_request_schema,
             mutation,
             variables=variables,
             context_value=graphql_context
@@ -864,7 +1088,7 @@ class TestCopilotKitGraphQLSchema:
         return strawberry.Schema(query=Query, mutation=Mutation)
 
     @pytest.mark.asyncio
-    async def test_Schema_HasCopilotKitTypes_WhenIntrospected(self, schema_introspection_test):
+    async def test_schema_has_copilotkit_types_when_introspected(self, schema_introspection_test):
         """
         Test that the schema contains the expected CopilotKit-specific types.
 
@@ -884,9 +1108,8 @@ class TestCopilotKitGraphQLSchema:
         """
 
         # Act
-        # Use TestClient to execute the query
-        test_client = client.TestClient(schema_introspection_test)
-        result = test_client.query(query)
+        # Use the client module directly
+        result = await client.query(schema_introspection_test, query)
 
         # Assert
         assert "errors" not in result, f"GraphQL errors: {result.get('errors')}"

@@ -1,7 +1,10 @@
 [project]
-name = "backend"
+name = "GPTWrapperKit"
 version = "0.1.0"
-description = "GPT Wrapper Boilerplate Backend"
+description = "A Python package for building and deploying LLM applications with ease."
+authors = [
+    { name = "Samuel Prime", email = "sprime01@gmail.com" }
+]
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
