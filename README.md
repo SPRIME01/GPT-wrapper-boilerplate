@@ -1,4 +1,4 @@
-# GPT Wrapper Boilerplate
+# GPTWrapperKit: A Production-Ready Boilerplate for GPT-Powered Applications
 
 ## Overview
 This is a **production-ready boilerplate** for building GPT-powered applications with **clean architecture, domain-driven design (DDD), and event-driven patterns**. It follows the **ports and adapters (hexagonal) architecture**, ensuring flexibility, scalability, and maintainability.
@@ -15,6 +15,7 @@ With this boilerplate, you can:
 - **Clean Architecture**: Decoupled layers for maintainability.
 - **Event-Driven Communication**: Message bus for internal decoupling.
 - **Adapters & Ports**: Abstraction layers for external APIs and persistence.
+- **CopilotKit Integration**: Ready-to-use UI components for building AI assistants.
 - **Full Test Coverage**: Unit, integration, and end-to-end (E2E) tests.
 - **CI/CD Ready**: Preconfigured GitHub Actions pipeline.
 - **Scalable & Extensible**: Supports monorepo & microservices architecture.
@@ -35,7 +36,7 @@ cd gpt-wrapper-boilerplate
 cd backend
 pip install -r requirements.txt
 
-# Frontend
+# CopilotKit Frontend
 cd ../frontend
 npm install
 ```
@@ -53,7 +54,7 @@ Ensure everything is working before making changes:
 cd backend
 pytest
 
-# Frontend tests
+# CopilotKit frontend tests
 cd ../frontend
 npm test
 ```
@@ -64,13 +65,13 @@ npm test
 cd backend
 uvicorn app.main:app --reload
 
-# Run Frontend
+# Run CopilotKit Frontend
 cd ../frontend
 npm start
 ```
 
 ### 6️⃣ Access the Application
-- **Frontend**: `http://localhost:3000`
+- **CopilotKit Frontend**: `http://localhost:3000`
 - **API Docs** (Swagger UI): `http://localhost:8000/docs`
 
 ---
@@ -84,18 +85,20 @@ gpt-wrapper-boilerplate/
 │   │   ├── domain/              # Core domain logic (Entities, Value Objects, Domain Events)
 │   │   ├── application/         # Use Cases, Service Layer
 │   │   ├── infrastructure/      # Adapters (DB, External APIs, Message Bus)
-│   │   ├── interface/           # HTTP Controllers, CLI Handlers
+│   │   ├── interface/           # HTTP Controllers, GraphQL Resolvers, WebSocket Handlers
 │   │   ├── main.py              # Entry Point (FastAPI)
 │   │   ├── config.py            # Configurations
 │   ├── tests/                   # Unit, Integration, and E2E Tests
 │   ├── requirements.txt         # Python Dependencies
 │   ├── Dockerfile               # Docker Setup
 │
-│── frontend/                    # Frontend Service (React, Next.js, Vue)
+│── frontend/                    # CopilotKit Frontend
 │   ├── src/
-│   │   ├── components/          # Reusable UI Components
-│   │   ├── pages/               # Page Views
-│   │   ├── services/            # API Calls, GPT Integration
+│   │   ├── components/          # Custom UI Components
+│   │   ├── pages/               # Page Components
+│   │   ├── services/            # API Clients (GraphQL, REST)
+│   │   ├── hooks/               # Custom React Hooks
+│   │   ├── copilot/             # CopilotKit Configuration
 │   ├── tests/                   # Frontend Tests
 │   ├── package.json             # JavaScript Dependencies
 │   ├── Dockerfile               # Docker Setup
@@ -118,14 +121,19 @@ gpt-wrapper-boilerplate/
 ### **1️⃣ Domain-Driven Design (DDD)**
 - **Entities**: Core objects (e.g., `GPTRequest`, `GPTResponse`, `UserSession`).
 - **Value Objects**: Immutable objects (e.g., `TokenizedInput`).
-- **Domain Services**: Business logic that doesn’t belong in entities (e.g., `PromptFormatter`).
+- **Domain Services**: Business logic that doesn't belong in entities (e.g., `PromptFormatter`).
 
 ### **2️⃣ Ports & Adapters (Hexagonal Architecture)**
-- **Inbound Ports**: Define how external systems (UI, CLI) interact with the app.
+- **Inbound Ports**: Define how external systems (CopilotKit UI, CLI) interact with the app.
 - **Outbound Ports**: Define how the app interacts with external services (GPT API, Database).
 
 ### **3️⃣ Event-Driven Architecture**
 - **Message Bus (Pub/Sub)** decouples services (e.g., async processing for chat completion).
+
+### **4️⃣ CopilotKit Integration**
+- **Chat UI Components**: Pre-built conversational UI elements
+- **GraphQL & REST Integration**: Dual API approach for structured data and streaming
+- **WebSocket Support**: Real-time communication for streaming responses
 
 ---
 
@@ -144,7 +152,7 @@ gpt-wrapper-boilerplate/
 Run all tests with:
 ```bash
 pytest  # Backend
-npm test  # Frontend
+npm test  # CopilotKit Frontend
 ```
 
 ---
@@ -167,6 +175,7 @@ docker-compose up --build
 🔹 Add **streaming support** for real-time GPT responses.
 🔹 Implement **fine-tuning support** for domain-specific applications.
 🔹 Expand **multi-tenant architecture** for SaaS use cases.
+🔹 Enhanced **CopilotKit integration** with custom plugins and workflows.
 
 ---
 
@@ -184,7 +193,7 @@ MIT License – Use freely, modify as needed!
 
 ### **🚀 Get Started Now: Clone, Test, and Build!**
 ```bash
-git clone https://github.com/yourusername/gpt-wrapper-boilerplate.git
+git clone https://github.com/SPRIME01/GPTWrapperKit.git
 ```
 
 ---

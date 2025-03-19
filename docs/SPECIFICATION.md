@@ -2,7 +2,7 @@
 
 **Version:** 1.0
 **Date:** 2025-03-10
-**Author:** [Your Name/Team]
+**Author:** Samuel Prime
 
 ---
 
@@ -89,14 +89,14 @@ This document specifies the design, architecture, and implementation details of 
 The GPT Wrapper Boilerplate is a foundational framework designed to accelerate the development of GPT-powered applications. It encapsulates:
 - **Core Business Logic:** Domain models, services, and events
 - **Infrastructure Layers:** Adapters for HTTP, persistence, messaging, and third-party integrations
-- **Frontend Interface:** A basic UI that interacts with backend services
+- **CopilotKit Frontend:** An integration with CopilotKit for building AI assistant interfaces
 
 ### 2.2 System Architecture
 The architecture follows Clean Architecture and Hexagonal (Ports and Adapters) principles:
 - **Domain Layer:** Contains the business logic, domain models (e.g., `GPTRequest`, `GPTResponse`), domain events, and factories
 - **Application Layer:** Implements use cases, interactors, and service coordination
 - **Infrastructure Layer:** Provides adapters for external communication (HTTP, databases, message bus) and implements cross-cutting concerns
-- **Frontend:** A separate UI application interfacing with backend APIs
+- **CopilotKit Frontend:** A separate UI application using CopilotKit to interface with backend APIs via GraphQL and REST
 
 ### 2.3 Key Design Patterns
 - **Creational Patterns:** Factory Method, Builder, Singleton
@@ -201,7 +201,7 @@ The system is divided into four primary layers:
 - **Domain Layer:** Contains core business models and logic
 - **Application Layer:** Hosts use cases and interacts with domain services
 - **Infrastructure Layer:** Implements adapters to interface with external systems
-- **Frontend:** Provides user interaction capabilities
+- **CopilotKit Frontend:** Provides user interaction capabilities with AI assistant UI components
 
 #### Domain Layer
 ```plaintext
@@ -236,13 +236,14 @@ gpt-wrapper-boilerplate/
 │   │   ├── domain/              # Core domain logic
 │   │   ├── application/         # Use Cases, Service Layer
 │   │   ├── infrastructure/      # Adapters (DB, External APIs)
-│   │   ├── interface/           # HTTP Controllers
+│   │   ├── interface/           # HTTP Controllers, GraphQL Resolvers
 │   ├── tests/                   # Unit, Integration, E2E Tests
 │
-│── frontend/                    # Frontend Service
+│── frontend/                    # CopilotKit Frontend
 │   ├── src/
-│   │   ├── components/          # UI Components
-│   │   ├── services/           # API Integration
+│   │   ├── components/          # Custom UI Components
+│   │   ├── copilot/             # CopilotKit Configuration
+│   │   ├── services/            # API Integration
 │
 │── libs/                        # Shared Libraries
 │   ├── common/                  # Shared types & utilities
@@ -253,6 +254,7 @@ gpt-wrapper-boilerplate/
 ### 5.3 Data Flow & Communication
 - **Synchronous Flow:** User inputs processed through defined inbound ports
 - **Asynchronous Flow:** Domain events published to message bus for async processing
+- **CopilotKit Communication:** GraphQL for structured data queries and WebSockets/SSE for streaming responses
 
 ### 5.4 Helper Functions and Primitive Types
 - **Helper Functions:**
@@ -305,6 +307,7 @@ MessageQueueItem
 - **Domain Layer:** Test domain models, business rules, and services
 - **Application Layer:** Test use cases and interactor logic
 - **Infrastructure Layer:** Test adapters and utility functions
+- **CopilotKit Components:** Test custom React components and hooks
 
 ### 6.2 Integration Testing
 - **Layer Integration:** Test interaction between layers
@@ -370,7 +373,8 @@ MessageQueueItem
 - **Fine-Tuning:** Support for domain-specific model fine-tuning
 - **Multi-Tenancy:** Expand architecture for SaaS applications
 - **Enhanced Analytics:** Track prompt performance and user engagement
-- **Advanced UI:** Additional interactive components and real-time feedback
+- **CopilotKit Extensions:** Develop custom plugins and extensions for CopilotKit
+- **Advanced UI:** Extend CopilotKit with additional interactive components and real-time feedback
 
 ### 8.1 Planned Features
 - Streaming support for real-time responses
